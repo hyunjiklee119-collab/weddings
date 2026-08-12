@@ -87,9 +87,9 @@
                 <div>
                     <h1 class="text-base font-bold leading-tight text-white flex items-center gap-2">
                         PA-6000 실물 현장 매뉴얼
-                        <span class="text-[10px] bg-slate-800 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded font-mono">v3.0</span>
+                        <span class="text-[10px] bg-slate-800 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded font-mono">v3.2</span>
                     </h1>
-                    <p class="text-xs text-slate-400">EP-6216 · ECS-6216 · MS-6100TTS 현장 사진 조작 가이드</p>
+                    <p class="text-xs text-slate-400">EP-6216 · ECS-6216 · MS-6100TTS 현장 조작 가이드</p>
                 </div>
             </div>
             <!-- Status Badge -->
@@ -583,20 +583,27 @@
                     <span id="modalBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
                         단계 안내
                     </span>
-                    <h3 id="modalTitle" class="text-sm font-bold text-white truncate max-w-[220px] sm:max-w-none">
+                    <h3 id="modalTitle" class="text-sm font-bold text-white truncate max-w-[180px] sm:max-w-none">
                         단계 제목
                     </h3>
                 </div>
-                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-700/60 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <div class="flex items-center gap-2">
+                    <!-- Local File Picker Helper -->
+                    <label class="cursor-pointer text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white px-2 py-1 rounded border border-slate-600 flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-upload text-blue-400"></i> 사진 연결
+                        <input type="file" id="localFileInput" accept="image/*" class="hidden" onchange="handleCustomPhotoUpload(event)">
+                    </label>
+                    <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-700/60 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Modal Body (Image Container) -->
             <div class="p-4 overflow-y-auto flex-1 space-y-4">
                 <!-- Image Viewer Area -->
                 <div id="svgContainer" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 flex flex-col items-center justify-center min-h-[220px]">
-                    <!-- Dynamic Image(s) injected via JavaScript -->
+                    <!-- Dynamic Image(s) or SVG Fallback injected via JavaScript -->
                 </div>
 
                 <!-- Explanation Text -->
@@ -612,7 +619,7 @@
                 <button id="btnPrevStep" onclick="navStep(-1)" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1">
                     <i class="fa-solid fa-arrow-left"></i> 이전 단계
                 </button>
-                <span id="stepCounter" class="text-xs font-mono text-slate-400">1 / 4</span>
+                <span id="stepCounter" class="text-xs font-mono text-slate-400">1 / 15</span>
                 <button id="btnNextStep" onclick="navStep(1)" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1">
                     다음 단계 <i class="fa-solid fa-arrow-right"></i>
                 </button>
@@ -641,220 +648,306 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
-            document.getElementById(tabId).classList.remove('hidden');
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) targetTab.classList.remove('hidden');
+            
             const activeBtn = document.getElementById('btn-' + tabId);
             if (activeBtn) activeBtn.classList.add('active');
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 1번부터 15번까지 전체 실물/SW 현장 사진 데이터 매핑
+        // SVG Technical Diagram Generator (Guarantees visual display even if local image files are absent)
+        function getSVGDiagram(photoKey, title) {
+            const colors = {
+                bg: '#0F172A',
+                panel: '#1E293B',
+                accentRed: '#EF4444',
+                accentGreen: '#10B981',
+                accentAmber: '#F59E0B',
+                accentBlue: '#3B82F6',
+                text: '#E2E8F0'
+            };
+
+            let svgContent = '';
+
+            switch(photoKey) {
+                case '1': // EP-6216 Mic
+                case '2': // PTT Press
+                    svgContent = `
+                        <rect x="20" y="30" width="360" height="70" rx="8" fill="${colors.panel}" stroke="#334155" stroke-width="2"/>
+                        <text x="35" y="52" fill="#94A3B8" font-size="10" font-family="monospace">interM EP-6216 EMERGENCY PANEL</text>
+                        <rect x="35" y="60" width="80" height="30" rx="4" fill="#000" stroke="#DC2626" stroke-width="1.5"/>
+                        <text x="75" y="80" fill="${colors.accentRed}" font-size="16" font-weight="900" text-anchor="middle">FIRE</text>
+                        
+                        <circle x="140" y="75" r="5" fill="${colors.accentGreen}"/>
+                        <text x="150" y="78" fill="#94A3B8" font-size="9">STAND-BY</text>
+                        
+                        <!-- Hand holding Mic -->
+                        <g transform="translate(260, 40)">
+                            <path d="M10,20 C10,5 30,5 30,20 L35,50 C35,65 5,65 5,50 Z" fill="#475569" stroke="#64748B" stroke-width="2"/>
+                            <rect x="12" y="10" width="16" height="20" rx="3" fill="#1E293B"/>
+                            <text x="20" y="24" fill="#E2E8F0" font-size="7" text-anchor="middle">MIC</text>
+                            <path d="M20,60 Q10,90 20,110" fill="none" stroke="#334155" stroke-width="4" stroke-dasharray="2,2"/>
+                            ${photoKey === '2' ? '<circle cx="5" cy="35" r="6" fill="#EF4444"/><text x="5" y="38" fill="#FFF" font-size="6" text-anchor="middle">PTT</text>' : ''}
+                        </g>
+                    `;
+                    break;
+
+                case '3': // Script & Mic
+                    svgContent = `
+                        <rect x="40" y="20" width="180" height="150" rx="6" fill="#1E293B" stroke="#475569" stroke-width="2"/>
+                        <text x="130" y="40" fill="#38BDF8" font-size="11" font-weight="bold" text-anchor="middle">상황 별 표준 안내 멘트</text>
+                        <line x1="50" y1="48" x2="210" y2="48" stroke="#334155" stroke-width="1"/>
+                        <rect x="50" y="55" width="160" height="40" rx="4" fill="#0F172A"/>
+                        <text x="55" y="70" fill="#E2E8F0" font-size="8">① 화재 경보 작동 중 (대피 안내)</text>
+                        <text x="55" y="85" fill="#94A3B8" font-size="7">"안전환경팀에서 안내 드립니다..."</text>
+                        
+                        <!-- Dynamic Hand Mic -->
+                        <g transform="translate(230, 60)">
+                            <ellipse cx="40" cy="40" rx="25" ry="35" fill="#334155" stroke="#64748B" stroke-width="3"/>
+                            <text x="40" y="45" fill="#EF4444" font-size="10" font-weight="bold" text-anchor="middle">PTT ON</text>
+                        </g>
+                    `;
+                    break;
+
+                case '4': // Fire Receiver Reset (N-MUX U)
+                case '5': // Emergency Stop (N-MUX U)
+                case '9': // Fire Receiver Monitor
+                    svgContent = `
+                        <rect x="50" y="20" width="300" height="160" rx="10" fill="#1E293B" stroke="#475569" stroke-width="3"/>
+                        <rect x="70" y="35" width="180" height="80" rx="6" fill="#020617" stroke="#334155" stroke-width="2"/>
+                        <text x="160" y="60" fill="#38BDF8" font-size="14" font-weight="bold" text-anchor="middle">N-MUX U</text>
+                        <text x="160" y="85" fill="${colors.accentGreen}" font-size="11" text-anchor="middle">● 시스템 정상 동작 중</text>
+                        
+                        <!-- Buttons Grid -->
+                        <g transform="translate(265, 35)">
+                            <circle cx="15" cy="15" r="10" fill="#334155"/>
+                            <circle cx="15" cy="45" r="10" fill="${photoKey === '5' ? '#F59E0B' : '#334155'}" stroke="${photoKey === '5' ? '#FBBF24' : 'none'}" stroke-width="2"/>
+                            <text x="15" y="48" fill="#FFF" font-size="7" text-anchor="middle">정지</text>
+                            
+                            <circle cx="15" cy="75" r="10" fill="${photoKey === '4' ? '#EF4444' : '#334155'}" stroke="${photoKey === '4' ? '#F87171' : 'none'}" stroke-width="2"/>
+                            <text x="15" y="78" fill="#FFF" font-size="7" text-anchor="middle">복구</text>
+                        </g>
+                        <text x="160" y="150" fill="#94A3B8" font-size="10" text-anchor="middle">N-MUX U 화재수신기 제어 패널</text>
+                    `;
+                    break;
+
+                case '6': // ECS-6216 Select ALL
+                case '7': // ECS-6216 Green Standby LEDs
+                case '10': // ECS-6216 All Active
+                    svgContent = `
+                        <rect x="20" y="40" width="360" height="110" rx="8" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+                        <text x="35" y="60" fill="#94A3B8" font-size="10" font-family="monospace">interM ECS-6216S EMERGENCY COMBINATION SYSTEM</text>
+                        
+                        <!-- ALL Button -->
+                        <rect x="40" y="75" width="45" height="30" rx="4" fill="${photoKey !== '6' ? '#065F46' : '#1E293B'}" stroke="${photoKey !== '6' ? '#10B981' : '#64748B'}" stroke-width="2"/>
+                        <rect x="45" y="80" width="35" height="6" rx="2" fill="${photoKey !== '6' ? '#10B981' : '#334155'}"/>
+                        <text x="62" y="98" fill="#E2E8F0" font-size="9" font-weight="bold" text-anchor="middle">ALL</text>
+
+                        <!-- Zone Buttons -->
+                        <g transform="translate(100, 75)">
+                            ${[1, 2, 3, 4, 5, 6].map((i) => `
+                                <rect x="${(i-1)*42}" y="0" width="38" height="30" rx="4" fill="${photoKey !== '6' ? '#065F46' : '#1E293B'}" stroke="${photoKey !== '6' ? '#10B981' : '#475569'}"/>
+                                <rect x="${(i-1)*42 + 4}" y="5" width="30" height="5" rx="1.5" fill="${photoKey !== '6' ? '#10B981' : '#334155'}"/>
+                                <text x="${(i-1)*42 + 19}" y="23" fill="#E2E8F0" font-size="8" text-anchor="middle">Z${i}</text>
+                            `).join('')}
+                        </g>
+                        <text x="200" y="135" fill="${colors.accentGreen}" font-size="10" text-anchor="middle">녹색 LED (스탠바이 대기 상태 점등)</text>
+                    `;
+                    break;
+
+                case '7-2': // PE-6103 Chime / Siren
+                    svgContent = `
+                        <rect x="30" y="40" width="340" height="100" rx="8" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+                        <text x="45" y="60" fill="#94A3B8" font-size="10" font-family="monospace">interM PE-6103 CHIME/SIREN</text>
+                        
+                        <g transform="translate(180, 70)">
+                            <rect x="0" y="0" width="70" height="35" rx="4" fill="#0284C7" stroke="#38BDF8" stroke-width="2"/>
+                            <text x="35" y="22" fill="#FFF" font-size="10" font-weight="bold" text-anchor="middle">CHIME</text>
+                            
+                            <rect x="80" y="0" width="70" height="35" rx="4" fill="#DC2626" stroke="#F87171" stroke-width="2"/>
+                            <text x="115" y="22" fill="#FFF" font-size="10" font-weight="bold" text-anchor="middle">SIREN</text>
+                        </g>
+                    `;
+                    break;
+
+                case '8': // Desktop Stand Mic
+                case '11': // Desktop Stand Mic
+                    svgContent = `
+                        <ellipse cx="200" cy="160" rx="60" ry="15" fill="#1E293B" stroke="#475569" stroke-width="2"/>
+                        <path d="M200,160 Q180,100 200,40" fill="none" stroke="#64748B" stroke-width="8" stroke-linecap="round"/>
+                        <rect x="180" y="20" width="40" height="30" rx="10" fill="#334155" stroke="#94A3B8" stroke-width="2"/>
+                        <circle cx="200" cy="155" r="6" fill="#10B981"/>
+                        <text x="200" y="190" fill="#E2E8F0" font-size="11" text-anchor="middle">PC 탁상형 방송용 마이크 (ON)</text>
+                    `;
+                    break;
+
+                case '12': // MS-6100 Icon Desktop
+                case '13': // MS-6100 Zone Select
+                case '14': // MS-6100 Start Standby
+                case '15': // MS-6100 TTS Window
+                    svgContent = `
+                        <rect x="30" y="20" width="340" height="160" rx="8" fill="#0F172A" stroke="#2563EB" stroke-width="2"/>
+                        <rect x="30" y="20" width="340" height="24" fill="#1E293B"/>
+                        <text x="45" y="36" fill="#38BDF8" font-size="10" font-weight="bold">MS-6100 TTS K (Digital P.A System)</text>
+                        <circle cx="355" cy="32" r="4" fill="#10B981"/>
+                        
+                        ${photoKey === '15' ? `
+                            <rect x="60" y="55" width="280" height="110" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="2"/>
+                            <text x="75" y="75" fill="#FFF" font-size="10" font-weight="bold">1. Input Text [TTS 안내 멘트 타이핑]</text>
+                            <rect x="75" y="82" width="140" height="40" rx="4" fill="#020617"/>
+                            <text x="80" y="96" fill="#94A3B8" font-size="8">안내 말씀 드립니다...</text>
+                            
+                            <rect x="225" y="82" width="105" height="40" rx="4" fill="#0F172A"/>
+                            <text x="230" y="95" fill="#38BDF8" font-size="7">Option: Chime ON</text>
+                            <text x="230" y="108" fill="#38BDF8" font-size="7">Pitch/Speed: 100%</text>
+                            
+                            <rect x="75" y="130" width="60" height="22" rx="4" fill="#10B981"/>
+                            <text x="105" y="145" fill="#FFF" font-size="10" font-weight="bold" text-anchor="middle">PLAY</text>
+                        ` : `
+                            <g transform="translate(50, 55)">
+                                <rect x="0" y="0" width="60" height="25" rx="3" fill="#2563EB"/>
+                                <text x="30" y="16" fill="#FFF" font-size="9" text-anchor="middle">운영모드</text>
+                                
+                                <rect x="180" y="15" width="50" height="25" rx="3" fill="#10B981"/>
+                                <text x="205" y="31" fill="#FFF" font-size="9" font-weight="bold" text-anchor="middle">경비</text>
+                                
+                                <rect x="220" y="75" width="60" height="22" rx="4" fill="${photoKey === '14' ? '#F59E0B' : '#334155'}"/>
+                                <text x="250" y="90" fill="#FFF" font-size="9" font-weight="bold" text-anchor="middle">시작</text>
+                            </g>
+                        `}
+                    `;
+                    break;
+
+                default:
+                    svgContent = `<text x="200" y="100" fill="#94A3B8" font-size="12" text-anchor="middle">${title}</text>`;
+            }
+
+            return `<svg viewBox="0 0 400 200" class="w-full h-auto rounded-lg shadow-inner">${svgContent}</svg>`;
+        }
+
+        // Custom User Photo Upload Handler (for testing local user image files)
+        const customPhotos = {};
+        function handleCustomPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                customPhotos[currentStepId] = e.target.result;
+                openModal(currentStepId); // Refresh modal view
+                showToast('선택한 이미지 파일이 성공적으로 연결되었습니다.');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Master Step Data Mapping (Links photo keys 1~15)
         const stepDataMap = {
-            // TAB 1 STEPS
             's1-1': {
                 badge: '1-1단계 [사진1]',
                 title: '방송실 이동 및 EP-6216 비상 마이크 수화',
                 desc: '소방 연동으로 화재 방송(FIRE)이 송출 중일 때 방송실로 신속히 이동하여 <strong>EP-6216 Emergency Panel</strong>의 비상 마이크 수화기를 집어 듭니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1XpS6Ym5N2C9P1B0mZ3k8P4q7R9u0V1W2=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/ef4444?text=Photo+1:+EP-6216+Emergency+Mic',
-                        caption: '사진 1: 방송실 EP-6216 비상 마이크 수화'
-                    }
-                ]
+                photos: [{ key: '1', localFile: '1.jpg', caption: '사진 1: 방송실 EP-6216 비상 마이크 수화' }]
             },
             's1-2': {
                 badge: '1-2단계 [사진2]',
                 title: 'PTT 스위치 누름 (우선권 전환)',
                 desc: '마이크 좌측에 위치한 <strong>PTT(Push To Talk) 스위치</strong>를 꾹 눌러 기존 자동 화재방송(FIRE)에서 비상 육성방송(EM)으로 방송 우선권을 전환합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1YpT7Zn6O3D0Q2C1nA4l9Q5r8S0v1W2X3=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/ef4444?text=Photo+2:+Pressing+PTT+Switch',
-                        caption: '사진 2: PTT 스위치 누름 (비상 우선권 전환)'
-                    }
-                ]
+                photos: [{ key: '2', localFile: '2.jpg', caption: '사진 2: PTT 스위치 누름 (비상 우선권 전환)' }]
             },
             's1-3': {
                 badge: '1-3단계 [사진3]',
                 title: 'PTT 누른 채 비상 멘트 송출',
                 desc: '<strong>PTT 스위치를 누르고 있는 상태</strong>에서 입을 마이크에 대고 벽면에 게시된 표준 대피 안내 문구를 명확하고 침착하게 송출합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1ZpU8Ao7P4E1R3D2oB5m0R6s9T1w2X3Y4=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/ef4444?text=Photo+3:+Script+and+Emergency+Mic',
-                        caption: '사진 3: 게시판 표준 대본 확인하며 방송 송출'
-                    }
-                ]
+                photos: [{ key: '3', localFile: '3.jpg', caption: '사진 3: 게시판 표준 대본 확인하며 방송 송출' }]
             },
             's1-4': {
                 badge: '1-4단계 [사진4]',
                 title: '방송 종료 및 수신기 화재 복구',
                 desc: '방송이 완료되면 PTT 스위치에서 손을 뗍니다. 화재 상황이 완전히 정리된 후에는 <strong>N-MUX U 화재수신기</strong>에서 ④번 [수신반 복구 및 리셋] 빨간 스위치를 누릅니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1apV9Bp8Q5F2S4E3pC6n1S7t0U2x3Y4Z5=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/ef4444?text=Photo+4:+Fire+Receiver+Reset+Button',
-                        caption: '사진 4: 화재 수신기 ④번 [수신반 복구 및 리셋] 버튼 조작'
-                    }
-                ]
+                photos: [{ key: '4', localFile: '4.jpg', caption: '사진 4: 화재 수신기 ④번 [수신반 복구 및 리셋] 버튼 조작' }]
             },
 
-            // TAB 2 STEPS
             's2-1': {
                 badge: '2-1단계 [사진5]',
                 title: '화재수신기 비상방송 정지',
                 desc: '현장 확인 결과 감지기 오작동으로 판명되면, 가장 먼저 <strong>N-MUX U 화재수신기 패널에서 [비상방송정지]</strong> 주황색 키를 눌러 화재 경보 연동을 정지시킵니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1bpW0Cq9R6G3T5F4qD7o2T8u1V3y4Z5a6=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/f59e0b?text=Photo+5:+Emergency+Broadcast+Stop',
-                        caption: '사진 5: 화재수신기 [비상방송정지] 버튼 누름'
-                    }
-                ]
+                photos: [{ key: '5', localFile: '5.jpg', caption: '사진 5: 화재수신기 [비상방송정지] 버튼 누름' }]
             },
             's2-2': {
                 badge: '2-2단계 [사진6]',
                 title: 'ECS-6216S 구역 선택',
                 desc: '<strong>ECS-6216S 릴레이 그룹/셀렉터</strong>에서 해제 안내를 보낼 구역 버튼을 선택합니다. 건물 전체에 안내할 경우 <span class="text-amber-400 font-bold">[ALL]</span> 버튼을 누릅니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1cpX1Dr0S7H4U6G5rE8p3U9v2W4z5a6b7=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/f59e0b?text=Photo+6:+ECS-6216S+ALL+Button',
-                        caption: '사진 6: ECS-6216S ① 방송 ZONE [ALL] 버튼 선택'
-                    }
-                ]
+                photos: [{ key: '6', localFile: '6.jpg', caption: '사진 6: ECS-6216S ① 방송 ZONE [ALL] 버튼 선택' }]
             },
             's2-3': {
                 badge: '2-3단계 [사진7 & 7-2]',
                 title: '녹색 LED 스탠바이 상태 확인 & 차임 송출(선택)',
                 desc: '<strong>[사진7]</strong> ECS-6216S 구역 선택 버튼에 녹색 LED(스탠바이) 점등을 확인합니다.<br><strong>[사진7-2]</strong> 방송 전 예고음을 보낼 경우 PE-6103 패널에서 ②번 [차임벨/싸이렌] 버튼을 조작합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1dpY2Es1T8I5V7H6sF9q4V0w3X5a6b7c8=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/10b981?text=Photo+7:+Green+LED+Standby',
-                        caption: '사진 7: ECS-6216S 구역 선택 시 녹색 LED 스탠바이 점등'
-                    },
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1epZ3Ft2U9J6W8I7tG0r5W1x4Y6b7c8d9=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/10b981?text=Photo+7-2:+PE-6103+Chime+Siren',
-                        caption: '사진 7-2: PE-6103 ② 싸이렌 & 차임벨 선택 패널'
-                    }
+                photos: [
+                    { key: '7', localFile: '7.jpg', caption: '사진 7: ECS-6216S 녹색 LED 스탠바이 점등' },
+                    { key: '7-2', localFile: '7-2.jpg', caption: '사진 7-2: PE-6103 ② 싸이렌 & 차임벨 선택 패널' }
                 ]
             },
             's2-4': {
                 badge: '2-4단계 [사진8]',
                 title: '마이크 방송 후 구역 해제',
                 desc: 'PC 구스넥 마이크 스위치를 켜고 비화재보 표준 멘트를 방송합니다. 방송이 끝나면 <strong>마이크를 끄고 ECS-6216 구역 버튼을 다시 눌러 해제</strong>합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1fpA4Gu3V0K7X9J8uH1s6X2y5Z7c8d9e0=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/f59e0b?text=Photo+8:+PC+Desktop+Microphone',
-                        caption: '사진 8: PC 방송용 탁상형 스탠드 마이크 방송'
-                    }
-                ]
+                photos: [{ key: '8', localFile: '8.jpg', caption: '사진 8: PC 방송용 탁상형 스탠드 마이크 방송' }]
             },
 
-            // TAB 3 STEPS
             's3-1': {
                 badge: '3-1단계 [사진9]',
                 title: '실화재 종료 후 수신기 확인',
                 desc: '화재 진압 및 안전 점검 완료 후 N-MUX U 화재 수신기가 정상 복구 상태인지 화면 및 LED 상태를 확인합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1gpB5Hv4W1L8Y0K9vI2t7Y3z6a8d9e0f1=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/10b981?text=Photo+9:+N-MUX+U+Fire+Receiver',
-                        caption: '사진 9: N-MUX U 화재수신기 정상 복구 모니터링 화면'
-                    }
-                ]
+                photos: [{ key: '9', localFile: '9.jpg', caption: '사진 9: N-MUX U 화재수신기 정상 복구 모니터링 화면' }]
             },
             's3-2': {
                 badge: '3-2단계 [사진10 & 7-2]',
                 title: 'ECS-6216 구역 선택 및 녹색등 확인',
                 desc: 'ECS-6216S 스위치에서 방송할 구역(전체일 경우 ALL)을 선택하여 녹색 LED 스탠바이 점등을 확인하고 필요시 차임을 송출합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1dpY2Es1T8I5V7H6sF9q4V0w3X5a6b7c8=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/10b981?text=Photo+10:+ECS-6216S+Green+LEDs',
-                        caption: '사진 10: ECS-6216S ALL/구역 선택 및 녹색 LED 점등'
-                    },
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1epZ3Ft2U9J6W8I7tG0r5W1x4Y6b7c8d9=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/10b981?text=Photo+7-2:+PE-6103+Chime+Siren',
-                        caption: '사진 7-2: PE-6103 차임벨 선택 패널'
-                    }
+                photos: [
+                    { key: '10', localFile: '10.jpg', caption: '사진 10: ECS-6216S ALL/구역 선택 및 녹색 LED 점등' },
+                    { key: '7-2', localFile: '7-2.jpg', caption: '사진 7-2: PE-6103 차임벨 선택 패널' }
                 ]
             },
             's3-3': {
                 badge: '3-3단계 [사진11]',
                 title: '상황종료 멘트 송출 및 방송 종료',
                 desc: 'PC 마이크를 활성화하여 상황 완료 복귀 안내 멘트를 차분하게 송출한 후, 마이크 Off 및 ECS-6216 선택 구역을 해제합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1fpA4Gu3V0K7X9J8uH1s6X2y5Z7c8d9e0=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/10b981?text=Photo+11:+PC+Desktop+Microphone',
-                        caption: '사진 11: PC 방송용 스탠드 마이크 송출'
-                    }
-                ]
+                photos: [{ key: '11', localFile: '11.jpg', caption: '사진 11: PC 방송용 스탠드 마이크 송출' }]
             },
 
-            // TAB 4 STEPS (MS-6100 TTS K Software Steps)
             's4-1': {
                 badge: '4-1단계 [사진12]',
                 title: 'MS-6100 TTS K 실행 및 접속',
                 desc: '방송 관제 PC 바탕화면에서 <strong>MS-6100 TTS</strong> 아이콘을 더블클릭하여 실행한 뒤 <span class="text-amber-300">Admin / Admin</span> 계정으로 접속합니다. 로그인 후 화면 우측 상단 <strong>통신 상태가 녹색등</strong>으로 활성화되었는지 확인합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1hpC6Iw5X2M9Z1L0wJ3u8Z4a7b9e0f1g2=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/38bdf8?text=Photo+12:+PC+Desktop+MS-6100+Icon',
-                        caption: '사진 12: 방송관제 PC 바탕화면 MS-6100 TTS K 아이콘 실행'
-                    }
-                ]
+                photos: [{ key: '12', localFile: '12.jpg', caption: '사진 12: 방송관제 PC 바탕화면 MS-6100 TTS K 아이콘 실행' }]
             },
             's4-2': {
                 badge: '4-2단계 [사진13]',
                 title: '운영모드 탭 이동 및 방송 구역 선택',
-                desc: '상단 <strong>[운영모드]</strong> 탭을 클릭한 뒤, 우측 <strong>&apos;지역선택&apos;</strong> 패널에서 방송을 보낼 구역(예: "경비" 구역 - 녹색 하이라이트)을 클릭하여 선택합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1iqD7Jx6Y3N0a2M1xK4v9a5b8c0f1g2h3=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/38bdf8?text=Photo+13:+Zone+Selection+Screen',
-                        caption: '사진 13: [운영모드] 탭 이동 후 방송 구역(경비) 선택'
-                    }
-                ]
+                desc: '상단 <strong>[운영모드]</strong> 탭을 클릭한 뒤, 우측 <strong>지역선택</strong> 패널에서 방송을 보낼 구역(예: "경비" 구역 - 녹색 하이라이트)을 클릭하여 선택합니다.',
+                photos: [{ key: '13', localFile: '13.jpg', caption: '사진 13: [운영모드] 탭 이동 후 방송 구역(경비) 선택' }]
             },
             's4-3': {
                 badge: '4-3단계 [사진14]',
                 title: "'시작' 단추 클릭 (스탠바이 대기)",
                 desc: '방송구역 선택이 완료되면 화면 우측 하단의 <strong>[시작]</strong> 버튼을 클릭하여 시스템을 대기(Standby) 상태로 활성화합니다.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1jrE8Ky7Z4O1b3N2yL5w0b6c9d1g2h3i4=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/38bdf8?text=Photo+14:+Start+Standby+Button',
-                        caption: '사진 14: 우측 하단 [시작] 스탠바이 버튼 클릭'
-                    }
-                ]
+                photos: [{ key: '14', localFile: '14.jpg', caption: '사진 14: 우측 하단 [시작] 스탠바이 버튼 클릭' }]
             },
             's4-4': {
                 badge: '4-4단계 [사진15 & 11]',
                 title: '음원 소스 선택 및 방송 진행 (TTS vs 육성)',
                 desc: '<strong>[사진15]</strong> TTS 자동음성 사용 시: 메인 상단 [TTS] 아이콘 ➔ 팝업창 멘트 입력/LOAD ➔ 우측 옵션(차임벨, 피치, 속도) ➔ [PLAY] 송출. 완료 시 [STOP] 및 [종료].<br><strong>[사진11]</strong> 육성 방송 사용 시: PC 마이크 On 후 멘트 송출 ➔ 완료 후 마이크 Off 및 [종료] 클릭.',
-                images: [
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1ksF9Lz8a5P2c4O3zM6x1c7d0e2h3i4j5=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/38bdf8?text=Photo+15:+TTS+Window+Options',
-                        caption: '사진 15: MS-6100 TTS 팝업창 (문구 입력, 속도/피치/차임벨 설정 및 PLAY)'
-                    },
-                    {
-                        url: 'https://lh3.googleusercontent.com/d/1fpA4Gu3V0K7X9J8uH1s6X2y5Z7c8d9e0=s1200',
-                        fallback: 'https://placehold.co/800x600/1e293b/38bdf8?text=Photo+11:+PC+Desktop+Microphone',
-                        caption: '사진 11: PC 방송용 탁상형 스탠드 마이크 (육성 방송 시)'
-                    }
+                photos: [
+                    { key: '15', localFile: '15.jpg', caption: '사진 15: MS-6100 TTS 팝업창 (문구 입력, 속도/피치/차임벨 설정 및 PLAY)' },
+                    { key: '11', localFile: '11.jpg', caption: '사진 11: PC 방송용 탁상형 스탠드 마이크 (육성 방송 시)' }
                 ]
             }
         };
 
-        // Navigation Ordering
         const stepOrder = [
             's1-1', 's1-2', 's1-3', 's1-4',
             's2-1', 's2-2', 's2-3', 's2-4',
@@ -874,46 +967,45 @@
             document.getElementById('modalTitle').innerText = data.title;
             document.getElementById('modalDesc').innerHTML = data.desc;
 
-            // Render photo(s) - supports 1 or 2 images
-            let imgHTML = '';
-            if (data.images && data.images.length > 1) {
-                // Multi-image grid layout
-                imgHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">`;
-                data.images.forEach((imgObj) => {
-                    imgHTML += `
+            const container = document.getElementById('svgContainer');
+            container.innerHTML = '';
+
+            // Check custom uploaded photo
+            if (customPhotos[stepId]) {
+                container.innerHTML = `
+                    <div class="relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex flex-col">
+                        <img src="${customPhotos[stepId]}" alt="Custom Photo" class="w-full h-auto max-h-[320px] object-contain rounded-t-xl" />
+                        <div class="p-2 bg-slate-900 text-xs text-center text-blue-400 font-semibold border-t border-slate-800">
+                            연결된 실제 현장 사진
+                        </div>
+                    </div>
+                `;
+            } else if (data.photos && data.photos.length > 0) {
+                const gridClass = data.photos.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 w-full' : 'w-full';
+                let html = `<div class="${gridClass}">`;
+
+                data.photos.forEach(photo => {
+                    const fallbackSvg = getSVGDiagram(photo.key, photo.caption);
+                    const svgDataUri = 'data:image/svg+xml;utf8,' + encodeURIComponent(fallbackSvg);
+
+                    html += `
                         <div class="relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-950 group flex flex-col">
-                            <div class="relative w-full h-44 sm:h-52 overflow-hidden bg-slate-900">
-                                <img src="${imgObj.url}" alt="${imgObj.caption}" 
-                                     onerror="this.onerror=null; this.src='${imgObj.fallback}';" 
+                            <div class="relative w-full h-48 sm:h-56 bg-slate-900 flex items-center justify-center overflow-hidden">
+                                <img src="${photo.localFile}" alt="${photo.caption}"
+                                     onerror="this.onerror=null; this.src='${svgDataUri}';" 
                                      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             </div>
-                            <div class="p-2 bg-slate-900/90 text-[11px] text-slate-200 border-t border-slate-800 font-medium flex items-center justify-center gap-1">
+                            <div class="p-2 bg-slate-900/90 text-[11px] text-slate-200 border-t border-slate-800 font-medium text-center flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-camera text-blue-400"></i>
-                                <span>${imgObj.caption}</span>
+                                <span>${photo.caption}</span>
                             </div>
                         </div>
                     `;
                 });
-                imgHTML += `</div>`;
-            } else if (data.images && data.images.length === 1) {
-                // Single image layout
-                const imgObj = data.images[0];
-                imgHTML = `
-                    <div class="relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-950 group flex flex-col">
-                        <div class="relative w-full h-56 sm:h-72 overflow-hidden bg-slate-900">
-                            <img src="${imgObj.url}" alt="${imgObj.caption}" 
-                                 onerror="this.onerror=null; this.src='${imgObj.fallback}';" 
-                                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                        </div>
-                        <div class="p-2 bg-slate-900/90 text-xs text-slate-200 border-t border-slate-800 font-medium text-center flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-camera text-blue-400"></i>
-                            <span>${imgObj.caption}</span>
-                        </div>
-                    </div>
-                `;
-            }
 
-            document.getElementById('svgContainer').innerHTML = imgHTML;
+                html += `</div>`;
+                container.innerHTML = html;
+            }
 
             // Step counter text
             const currentIndex = stepOrder.indexOf(stepId);
@@ -966,13 +1058,12 @@
                 return;
             }
 
-            // Cancel any active speech
             window.speechSynthesis.cancel();
 
             const text = document.getElementById(elementId).innerText;
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'ko-KR';
-            utterance.rate = 0.95; // Slightly slower for clear emergency instruction
+            utterance.rate = 0.95;
             utterance.pitch = 1.0;
 
             window.speechSynthesis.speak(utterance);
